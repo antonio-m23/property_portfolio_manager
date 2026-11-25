@@ -1,3 +1,6 @@
+using property_portfolio_manager.Data;
+using property_portfolio_manager.Presentation.Forms;
+
 namespace property_portfolio_manager
 {
     internal static class Program
@@ -11,7 +14,10 @@ namespace property_portfolio_manager
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
             ApplicationConfiguration.Initialize();
-            Application.Run(new Form1());
+
+            DatabaseInitializer.Initialize();
+            
+            Application.Run(new MainForm());
         }
     }
 }
