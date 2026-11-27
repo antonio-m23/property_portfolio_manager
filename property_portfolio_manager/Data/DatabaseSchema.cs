@@ -277,5 +277,140 @@ namespace property_portfolio_manager.Data
             """;
 
 
+        public const string CreateContractOverlapTriggers = """
+            CREATE TRIGGER IF NOT EXISTS
+                TR_RentalContracts_NoOverlap_Insert
+            BEFORE INSERT ON RentalContracts
+            FOR EACH ROW
+            WHEN EXISTS (
+                SELECT 1
+                FROM RentalContracts AS existing
+                WHERE existing.PropertyId = NEW.PropertyId
+                  AND existing.StartDate <=
+                      COALESCE(NEW.ActualEndDate, NEW.PlannedEndDate)
+                  AND COALESCE(
+                      existing.ActualEndDate,
+                      existing.PlannedEndDate
+                  ) >= NEW.StartDate
+            )
+            BEGIN
+                SELECT RAISE(
+                    ABORT,
+                    'Rental contracts cannot overlap'
+                );
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS
+                TR_RentalContracts_NoOverlap_Update
+            BEFORE UPDATE OF
+                PropertyId, StartDate, PlannedEndDate, ActualEndDate
+            ON RentalContracts
+            FOR EACH ROW
+            WHEN EXISTS (
+                SELECT 1
+                FROM RentalContracts AS existing
+                WHERE existing.PropertyId = NEW.PropertyId
+                  AND existing.Id <> OLD.Id
+                  AND existing.StartDate <=
+                      COALESCE(NEW.ActualEndDate, NEW.PlannedEndDate)
+                  AND COALESCE(
+                      existing.ActualEndDate,
+                      existing.PlannedEndDate
+                  ) >= NEW.StartDate
+            )
+            BEGIN
+                SELECT RAISE(
+                    ABORT,
+                    'Rental contracts cannot overlap'
+                );
+            END;
+            """;
+
+
+        public const string CreateSaleIntegrityTriggers = """
+            CREATE TRIGGER IF NOT EXISTS
+                TR_PropertySales_Validate_Insert
+            BEFORE INSERT ON PropertySales
+            FOR EACH ROW
+            WHEN EXISTS (
+                SELECT 1
+                FROM RentalContracts AS contract
+                WHERE contract.PropertyId = NEW.PropertyId
+                  AND COALESCE(
+                      contract.ActualEndDate,
+                      contract.PlannedEndDate
+                  ) >= NEW.SaleDate
+            )
+            BEGIN
+                SELECT RAISE(
+                    ABORT,
+                    'Cannot sell a property with active or future contracts'
+                );
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS
+                TR_PropertySales_Validate_Update
+            BEFORE UPDATE OF PropertyId, SaleDate
+            ON PropertySales
+            FOR EACH ROW
+            WHEN EXISTS (
+                SELECT 1
+                FROM RentalContracts AS contract
+                WHERE contract.PropertyId = NEW.PropertyId
+                  AND COALESCE(
+                      contract.ActualEndDate,
+                      contract.PlannedEndDate
+                  ) >= NEW.SaleDate
+            )
+            BEGIN
+                SELECT RAISE(
+                    ABORT,
+                    'Cannot sell a property with active or future contracts'
+                );
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS
+                TR_RentalContracts_ValidateSale_Insert
+            BEFORE INSERT ON RentalContracts
+            FOR EACH ROW
+            WHEN EXISTS (
+                SELECT 1
+                FROM PropertySales AS sale
+                WHERE sale.PropertyId = NEW.PropertyId
+                  AND COALESCE(
+                      NEW.ActualEndDate,
+                      NEW.PlannedEndDate
+                  ) >= sale.SaleDate
+            )
+            BEGIN
+                SELECT RAISE(
+                    ABORT,
+                    'Rental contract conflicts with property sale'
+                );
+            END;
+
+            CREATE TRIGGER IF NOT EXISTS
+                TR_RentalContracts_ValidateSale_Update
+            BEFORE UPDATE OF
+                PropertyId, StartDate, PlannedEndDate, ActualEndDate
+            ON RentalContracts
+            FOR EACH ROW
+            WHEN EXISTS (
+                SELECT 1
+                FROM PropertySales AS sale
+                WHERE sale.PropertyId = NEW.PropertyId
+                  AND COALESCE(
+                      NEW.ActualEndDate,
+                      NEW.PlannedEndDate
+                  ) >= sale.SaleDate
+            )
+            BEGIN
+                SELECT RAISE(
+                    ABORT,
+                    'Rental contract conflicts with property sale'
+                );
+            END;
+            """;
+
     }
 }

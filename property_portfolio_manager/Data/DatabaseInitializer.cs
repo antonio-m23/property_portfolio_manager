@@ -52,8 +52,11 @@ namespace property_portfolio_manager.Data
                 DatabaseSchema.CreateDeadlinesTable,
                 DatabaseSchema.CreatePropertySalesTable,
                 DatabaseSchema.CreateOpeningBalancesTable,
-                DatabaseSchema.CreateIndexes
+                DatabaseSchema.CreateIndexes,
+                DatabaseSchema.CreateContractOverlapTriggers,
+                DatabaseSchema.CreateSaleIntegrityTriggers
             };
+
 
             foreach (string sql in scripts)
             {
