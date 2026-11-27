@@ -24,6 +24,24 @@ The following features are planned for the first release:
 - [ ] **Property Sales** — Record property sales while preserving historical financial information.
 - [ ] **Portfolio Dashboard** — Display essential portfolio statistics and items requiring attention.
 
+
+---
+
+## 🏗️ Current Implementation
+
+The application foundation is implemented and includes:
+
+- **Modern Windows Forms Interface** — A resizable desktop layout with a navy sidebar, page header, and dedicated content area.
+- **Dynamic Navigation** — Six navigable screens (Dashboard, Properties, Payments, Maintenance, Deadlines, and Performance), with automatic page titles and active navigation highlighting.
+- **Modular UI Architecture** — Separate `UserControl` views and reusable navigation logic.
+- **SQLite Integration** — Automatic initialization of a local SQLite database using `Microsoft.Data.Sqlite`.
+- **Database Schema** — Eight relational tables, five indexes, and six integrity triggers.
+- **Data Integrity** — Foreign key constraints, validation rules, duplicate prevention, and database-level protection against overlapping rental contracts and conflicting property sales.
+- **Schema Versioning** — Initial database schema version tracked through `PRAGMA user_version`.
+
+The application currently provides a functional navigation shell and an initialized database. Property management workflows, CRUD operations, and financial calculations are still under development.
+
+
 ---
 
 ## 🧠 How It Works
@@ -78,27 +96,48 @@ The project follows a modular structure organized by responsibility:
 
 ```text
 
+
 property_portfolio_manager/
 │
 ├── .gitignore
 ├── LICENSE
 ├── README.md
+├── property_portfolio_manager.slnx
 │
 └── property_portfolio_manager/
-    ├── Data/                # SQLite access and database initialization
-    │   └── Repositories/    # SQL queries and data persistence
-    ├── Models/              # Application entities and data structures
-    ├── Presentation/        # Windows Forms user interface
-    │   ├── Controls/        # Reusable UI components
-    │   ├── Forms/           # Application windows and dialogs
-    │   └── Views/           # Individual application screens
-    ├── Services/            # Business rules and financial calculations
-    ├── Form1.cs             # Initial Windows Form (to be renamed)
-    └── Program.cs           # Application entry point
+    │
+    ├── property_portfolio_manager.csproj
+    ├── Program.cs
+    │
+    ├── Data/
+    │   ├── Repositories/
+    │   ├── DatabasePaths.cs
+    │   ├── DatabaseConnectionFactory.cs
+    │   ├── DatabaseInitializer.cs
+    │   └── DatabaseSchema.cs
+    │
+    ├── Models/
+    │
+    ├── Presentation/
+    │   ├── Controls/
+    │   ├── Forms/
+    │   │   └── MainForm.cs
+    │   └── Views/
+    │       ├── DashboardView.cs
+    │       ├── PropertiesView.cs
+    │       ├── PaymentsView.cs
+    │       ├── MaintenanceView.cs
+    │       ├── DeadlinesView.cs
+    │       └── PerformanceView.cs
+    │
+    └── Services/
+
 
 ```
 
-The structure will be populated progressively as the application is developed.
+The presentation layer and SQLite database foundation are implemented. The `Models`, `Services`, and `Repositories` directories will be populated as the corresponding application features are developed.
+
+Windows Forms Designer and resource files are omitted from the diagram for readability. The SQLite database is stored separately in the user's local application data directory, outside the Git repository.
 
 This separation aims to keep the codebase clean, maintainable, and easier to navigate and extend.
 
@@ -120,32 +159,64 @@ git clone https://github.com/antonio-m23/property_portfolio_manager.git
 cd property_portfolio_manager
 ```
 
-Open the project in Visual Studio 2026.
 
-Build the application using Visual Studio or the .NET CLI:
+Open `property_portfolio_manager.slnx` in Visual Studio 2026.
+
+Build and run the application using Visual Studio, or press `Ctrl + F5` to start without debugging.
+
+Alternatively, from the repository root, use the .NET CLI:
 
 ```bash
+dotnet restore
 dotnet build
+dotnet run --project property_portfolio_manager/property_portfolio_manager.csproj
 ```
 
-**Note:** The application is currently under development. The initial project contains the Windows Forms application scaffold; the portfolio management features are not yet available.
+### Local Database
+
+The application automatically creates and initializes a local SQLite database on its first launch.
+
+The database is stored at:
+
+```text
+%LOCALAPPDATA%\PropertyPortfolioManager\portfolio.db
+```
+
+The initial schema includes eight relational tables, five indexes, and six integrity triggers.
+
+The database is stored outside the project directory and is not included in the Git repository.
+
+**Development Status:** The application currently provides a functional Windows Forms interface with navigation between six sections and an initialized SQLite database. Property management operations, financial calculations, and the remaining application features are still under development.
 
 ---
 
+
 ## 🧪 Testing
 
-Automated tests and functional verification will be introduced as the application is implemented.
+The project has undergone initial manual build, runtime, and database verification.
 
-The testing process will focus on:
+### Completed Checks
 
-- Property and contract data validation
-- Prevention of overlapping rental contracts
-- Monthly payment generation and duplicate prevention
-- Maintenance and expense consistency
-- Financial calculations and investment performance
-- SQLite database integrity
+- **Build Verification** — Successfully compiled using `dotnet build` with .NET 10.
+- **Application Startup** — Verified that the Windows Forms application launches successfully.
+- **Navigation Testing** — Manually verified navigation between all six application sections, including page switching, header updates, and active button highlighting.
+- **SQLite Initialization** — Verified automatic database creation and successful initialization across multiple application launches.
+- **Database Schema Verification** — Confirmed schema version 1, eight relational tables, five application indexes, and six integrity triggers.
+- **Referential Integrity** — Verified `PRAGMA foreign_key_check` and confirmed that SQLite rejects a rental contract referencing a nonexistent property.
+- **Transaction Rollback** — Confirmed that the foreign key validation test did not persist test data.
 
-Testing instructions and results will be documented as the corresponding features are completed.
+### Planned Tests
+
+Automated tests will be introduced as the application features are implemented, focusing on:
+
+- Property and rental contract validation, including overlapping contract prevention.
+- Monthly rent generation and duplicate payment prevention.
+- Maintenance and expense consistency.
+- Property sale restrictions and historical data preservation.
+- Financial calculations, investment recovery, and portfolio performance.
+- SQLite constraints, schema initialization, and future database migrations.
+
+The existing checks validate the application foundation but do not yet represent a comprehensive automated test suite.
 
 ---
 
@@ -153,9 +224,9 @@ Testing instructions and results will be documented as the corresponding feature
 
 - **C#** — Core programming language
 - **.NET 10** — Application framework
-- **Windows Forms** — Desktop graphical user interface
-- **SQLite** — Planned local relational database
-- **Microsoft.Data.Sqlite** — Planned database access library
+- **Windows Forms** — Desktop graphical user interface and navigation
+- **SQLite** — Local relational database with schema versioning and integrity constraints
+- **Microsoft.Data.Sqlite (10.0.15)** — ADO.NET provider for SQLite connections and database operations
 - **Visual Studio 2026** — Development environment
 - **Git & GitHub** — Version control and project hosting
 
